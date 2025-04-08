@@ -1,0 +1,95 @@
+--- dsdt.dsl.orig	2019-11-18 16:53:12.994096080 +0100
++++ dsdt.dsl	2019-11-18 17:34:08.797319563 +0100
+@@ -18,7 +18,7 @@
+  *     Compiler ID      "1025"
+  *     Compiler Version 0x00040000 (262144)
+  */
+-DefinitionBlock ("", "DSDT", 2, "ACRSYS", "ACRPRDCT", 0x00000003)
++DefinitionBlock ("", "DSDT", 2, "ACRSYS", "ACRPRDCT", 0x00000004)
+ {
+     /*
+      * iASL Warning: There were 2 external control methods found during
+@@ -7881,6 +7881,59 @@
+             }
+         }
+ 
++        Device (PWM1)
++        {
++            Name (_ADR, Zero)  // _ADR: Address
++            Name (_HID, "80860F09" /* Intel PWM Controller */)  // _HID: Hardware ID
++            Name (_CID, "80860F09" /* Intel PWM Controller */)  // _CID: Compatible ID
++            Name (_DDN, "Intel(R) PWM Controller #1 - 80860F08")  // _DDN: DOS Device Name
++            Name (_UID, One)  // _UID: Unique ID
++            Name (RBUF, ResourceTemplate ()
++            {
++                Memory32Fixed (ReadWrite,
++                    0x00000000,         // Address Base
++                    0x00001000,         // Address Length
++                    _Y0D)
++            })
++            Method (_CRS, 0, NotSerialized)  // _CRS: Current Resource Settings
++            {
++                CreateDWordField (RBUF, \_SB.PWM1._Y0D._BAS, B0BA)  // _BAS: Base Address
++                CreateDWordField (RBUF, \_SB.PWM1._Y0D._LEN, B0LN)  // _LEN: Length
++                B0BA = P10A /* \P10A */
++                B0LN = P10L /* \P10L */
++                Return (RBUF) /* \_SB_.PWM1.RBUF */
++            }
++
++            Method (_STA, 0, NotSerialized)  // _STA: Status
++            {
++                If (P10A == Zero)
++                {
++                    Return (Zero)
++                }
++
++                Return (0x0F)
++            }
++
++            OperationRegion (KEYS, SystemMemory, P11A, 0x0100)
++            Field (KEYS, DWordAcc, NoLock, WriteAsZeros)
++            {
++                Offset (0x84), 
++                PSAT,   32
++            }
++
++            Method (_PS3, 0, NotSerialized)  // _PS3: Power State 3
++            {
++                PSAT |= 0x03
++                Local0 = PSAT /* \_SB_.PWM1.PSAT */
++            }
++
++            Method (_PS0, 0, NotSerialized)  // _PS0: Power State 0
++            {
++                PSAT &= 0xFFFFFFFC
++                Local0 = PSAT /* \_SB_.PWM1.PSAT */
++            }
++        }
++
+         Device (URT1)
+         {
+             Name (_ADR, Zero)  // _ADR: Address
+@@ -11765,7 +11818,7 @@
+                 Return (XVCD) /* \WMI0.XVCD */
+             }
+ 
+-            OperationRegion (\WMIA, SystemMemory, PMIM, 0x9000)
++            OperationRegion (WMIA, SystemMemory, PMIM, 0x9000)
+             Field (WMIA, AnyAcc, NoLock, Preserve)
+             {
+                 WAG1,   2048, 
+@@ -13045,14 +13098,10 @@
+                 If ((STAS & One))
+                 {
+                     Local0 = One
+-                    PBCG |= 0x05000000
+-                    HMCG |= 0x05000000
+                 }
+                 Else
+                 {
+                     Local0 = Zero
+-                    PBCG &= 0xF0FFFFFF
+-                    HMCG &= 0xF0FFFFFF
+                 }
+ 
+                 ^^PCI0.GFX0.CLID = Local0
