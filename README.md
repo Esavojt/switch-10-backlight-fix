@@ -3,7 +3,7 @@
 All credit to @jwrdegoede, this is just a tutorial how to patch and compile dsdt overlay
 
 ## Install dependencies
-`apt install acpica-tools`
+`apt install acpica-tools cpio`
 
 ## Get DSDT table
 `cat /sys/firmware/acpi/tables/DSDT > dsdt.dat`
